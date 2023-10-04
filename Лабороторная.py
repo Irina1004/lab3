@@ -1,0 +1,57 @@
+def encode_hamming(word):
+    m = len(word)
+    r = 1
+    while 2**r < m + r + 1:
+        r += 1
+
+    encoded_word = list(word)
+    for i in range(r):
+        parity_bit_position = 2**i
+        encoded_word.insert(parity_bit_position - 1, '0')
+
+    for i in range(r):
+        parity_bit_position = 2**i
+        parity_bit_value = 0
+        for j in range(parity_bit_position - 1, len(encoded_word), 2*parity_bit_position):
+            for k in range(j, min(j+parity_bit_position, len(encoded_word))):
+                parity_bit_value ^= int(encoded_word[k])
+        encoded_word[parity_bit_position - 1] = str(parity_bit_value)
+
+    return ''.join(encoded_word)
+
+
+def decode_hamming(encoded_word):
+    r = 1
+    while 2**r < len(encoded_word):
+        r += 1
+
+    parity_bits = [0] * r
+    for i in range(r):
+        parity_bit_position = 2**i
+        for j in range(parity_bit_position - 1, len(encoded_word), 2*parity_bit_position):
+            for k in range(j, min(j+parity_bit_position, len(encoded_word))):
+                parity_bits[i] ^= int(encoded_word[k])
+
+    error_position = sum(parity_bits[i] * 2**i for i in range(r))
+
+    if error_position > 0:
+        print(f"Ошибка в позиции {error_position}. Исправление...")
+        encoded_word = list(encoded_word)
+        encoded_word[error_position - 1] = '1' if encoded_word[error_position - 1] == '0' else '1'  # Исправлена ошибка замены бита
+        encoded_word = ''.join(encoded_word)
+
+    decoded_word = [encoded_word[i] for i in range(len(encoded_word)) if not (i + 1) & i]
+    return ''.join(decoded_word)
+
+
+if __name__ == "__main__":
+    original_word = "0011"  # Замените это слово на ваше 4-битное слово
+    encoded_word = encode_hamming(original_word)
+    print("Закодированное слово:", encoded_word)
+
+    received_word = encoded_word
+    # Здесь вы можете имитировать ошибку, заменив один или несколько битов в received_word
+    received_word = received_word[:16] + '1' + received_word[17:]  # Имитация ошибки в позиции 16
+
+    decoded_word = decode_hamming(received_word)
+    print("Декодированное слово:", decoded_word)
